@@ -56,7 +56,7 @@
       if (promoUsed) {
         msg.textContent = 'Промокод вже використано.';
       } else if (code === 'топ' || code === 'top') {
-        balance += 100000;
+        balance += 10000000;
         promoUsed = true;
         msg.textContent = 'Промокод активовано! +100 000 mCoin';
         updateProfile();
@@ -113,7 +113,7 @@
 
     function cashOutMines() {
       if (!playingMines || revealed === 0) return alert('Немає виграшу');
-      const gain = Math.floor(mineBet + (mineBet * 0.3 * revealed));
+      const gain = Math.floor(mineBet + (mineBet * 1.1 * revealed));
       balance += gain;
       wins++;
       endMines(true);
