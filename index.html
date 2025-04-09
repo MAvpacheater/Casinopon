@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mCasino - Міни</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tile { width: 3rem; height: 3rem; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold text-center mb-6">mCasino - Міни</h1>
+
+    <!-- Профіль -->
+    <div class="mb-4">
+      <p>Баланс: <span id="balance">1000</span> mCoin</p>
+      <p>Виграші: <span id="wins">0</span></p>
+      <p>Програші: <span id="losses">0</span></p>
+    </div>
+
+    <!-- Промокод -->
+    <div class="mb-6">
+      <label>Промокод: <input id="promoInput" type="text" class="text-black px-2 w-40" /></label>
+      <button onclick="applyPromo()" class="ml-2 bg-purple-600 px-3 py-1 rounded">Активувати</button>
+      <p id="promoMsg" class="text-green-400 mt-1"></p>
+    </div>
+
+    <!-- Міни -->
+    <div>
+      <div class="mb-4">
+        <label>Ставка: <input id="mineBet" type="number" value="10" class="text-black px-2 w-20" /></label>
+        <label class="ml-4">Міни: <input id="mineCount" type="number" value="3" min="1" max="24" class="text-black px-2 w-20" /></label>
+        <button onclick="startMines()" class="ml-4 bg-blue-600 px-3 py-1 rounded">Старт</button>
+        <button onclick="cashOutMines()" class="ml-2 bg-green-600 px-3 py-1 rounded">Забрати</button>
+      </div>
+      <div id="minefield" class="grid grid-cols-5 gap-2"></div>
+    </div>
+  </div>
+
+  <script>
+    let balance = 1000, wins = 0, losses = 0;
+    let mineState = [], revealed = 0, playingMines = false, mineBet = 0;
+    let promoUsed = false;
+
+    function updateProfile() {
+      document.getElementById('balance').textContent = balance;
+      document.getElementById('wins').textContent = wins;
+      document.getElementById('losses').textContent = losses;
+    }
+
+    function applyPromo() {
+      const code = document.getElementById('promoInput').value.trim().toLowerCase();
+      const msg = document.getElementById('promoMsg');
+      if (promoUsed) {
+        msg.textContent = 'Промокод вже використано.';
+      } else if (code === 'топ' || code === 'top') {
+        balance += 100000;
+        promoUsed = true;
+        msg.textContent = 'Промокод активовано! +100 000 mCoin';
+        updateProfile();
+      } else {
+        msg.textContent = 'Невірний промокод.';
+      }
+    }
+
+    function startMines() {
+      const bet = parseInt(document.getElementById('mineBet').value);
+      const mines = parseInt(document.getElementById('mineCount').value);
+      if (bet <= 0 || mines < 1 || mines >= 25 || bet > balance) return alert('Невірні дані');
+
+      playingMines = true;
+      mineBet = bet;
+      revealed = 0;
+      balance -= bet;
+
+      mineState = Array(25).fill(false);
+      let placed = 0;
+      while (placed < mines) {
+        let i = Math.floor(Math.random() * 25);
+        if (!mineState[i]) {
+          mineState[i] = true;
+          placed++;
+        }
+      }
+
+      const field = document.getElementById('minefield');
+      field.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'tile bg-blue-600 text-xl rounded';
+        btn.textContent = '?';
+        btn.onclick = () => revealTile(i, btn);
+        field.appendChild(btn);
+      }
+      updateProfile();
+    }
+
+    function revealTile(i, btn) {
+      if (!playingMines || btn.disabled) return;
+      if (mineState[i]) {
+        btn.textContent = '💣';
+        btn.classList.replace('bg-blue-600', 'bg-red-600');
+        endMines(false);
+      } else {
+        revealed++;
+        btn.textContent = '💎';
+        btn.classList.replace('bg-blue-600', 'bg-green-600');
+        btn.disabled = true;
+      }
+    }
+
+    function cashOutMines() {
+      if (!playingMines || revealed === 0) return alert('Немає виграшу');
+      const gain = Math.floor(mineBet + (mineBet * 0.3 * revealed));
+      balance += gain;
+      wins++;
+      endMines(true);
+    }
+
+    function endMines(win) {
+      playingMines = false;
+      document.querySelectorAll('#minefield button').forEach(btn => btn.disabled = true);
+      if (!win) losses++;
+      updateProfile();
+    }
+
+    updateProfile();
+  </script>
+</body>
+</html>
